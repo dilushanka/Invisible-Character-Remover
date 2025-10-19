@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invisible Character Highlighter and Remover</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    body { background: #f7f9fc; }
+    .container { max-width: 900px; }
+    .drop-zone {
+        border: 2px dashed #4DA1A9;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        color: #4DA1A9;
+        cursor: pointer;
+        transition: background 0.3s, color 0.3s;
+    }
+    .drop-zone.dragover { background: #4DA1A9; color: #fff; }
+    pre {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 15px;
+        border-radius: 8px;
+        background: #1e1e1e;
+        color: #f0f0f0;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .invisible-char {
+        background: yellow;
+        color: red;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header text-center bg-primary text-white">
+            <h3><i class="fas fa-magic me-2"></i>Invisible Character Highlighter</h3>
+            <small>Paste code or drag files to see invisible characters</small>
+        </div>
+        <div class="card-body">
+            <div class="drop-zone mb-3" id="dropZone">
+                <i class="fas fa-file-upload fa-2x"></i>
+                <p class="mb-0 mt-2">Drag and drop files here or click to select</p>
+                <input type="file" id="fileInput" multiple hidden>
+            </div>
+            <textarea id="inputCode" class="form-control mb-3" rows="8" placeholder="Paste your code here..."></textarea>
+            <div class="d-flex justify-content-between mb-3">
+                <button class="btn btn-success" id="highlightBtn"><i class="fas fa-eye me-2"></i>Highlight Invisible Characters</button>
+                <button class="btn btn-danger" id="cleanBtn"><i class="fas fa-broom me-2"></i>Remove Invisible Characters</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header text-center bg-primary text-white">
+            <h5>Preview</h5>
+        </div>
+        <div class="card-body">
+            <pre id="outputCode"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+const input = document.getElementById('inputCode');
+const output = document.getElementById('outputCode');
+const highlightBtn = document.getElementById('highlightBtn');
+const cleanBtn = document.getElementById('cleanBtn');
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+
+// Match invisible characters
+const invisibleRegex = /[\u200B-\u200D\uFEFF\u00A0]/g;
+
+// Highlight invisible characters
+function highlightInvisible(str) {
+    return str.replace(invisibleRegex, match => `<span class="invisible-char">⦿</span>`);
+}
+
+// Remove invisible characters
+function removeInvisible(str) {
+    return str.replace(invisibleRegex, '');
+}
+
+// Button events
+highlightBtn.addEventListener('click', () => {
+    output.innerHTML = highlightInvisible(input.value);
+});
+
+cleanBtn.addEventListener('click', () => {
+    const cleaned = removeInvisible(input.value);
+    input.value = cleaned;
+    output.textContent = cleaned;
+});
+
+// Drag and drop
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+    let allText = '';
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            allText += e.target.result + '\n';
+            input.value = allText;
+            output.innerHTML = highlightInvisible(allText);
+        };
+        reader.readAsText(file);
+    });
+}
+</script>
+</body>
+</html>
